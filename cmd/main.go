@@ -6,15 +6,22 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"rest/server"
+	"rest/internal/db"
+	"rest/internal/server"
 	"time"
 )
 
 func main() {
+	dbConn, err := db.InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	log.Println("DB connection established")
+	defer dbConn.Close()
 
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      server.NewRouter(),
+		Handler:      server.NewRouter(dbConn),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -26,6 +33,7 @@ func main() {
 			log.Fatalf("ListenAndServe failed: %v", err)
 		}
 	}()
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt) // capture SIGINT
 	<-quit                            // BLOCK until signal received
