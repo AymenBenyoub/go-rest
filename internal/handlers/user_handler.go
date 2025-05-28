@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"rest/internal/db"
 	"rest/internal/repository"
-	"strconv"
+	
 )
-
 type UserHandler struct {
 	repo *repository.UserRepository
 }
@@ -34,13 +33,10 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, "Invalid User ID", http.StatusBadRequest)
-		return
-	}
+	
+	
 
-	user, err := h.repo.GetUserByID(userID)
+	user, err := h.repo.GetUserByID(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -68,19 +64,13 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	var newUsername string
 	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w,"User ID is required", http.StatusBadRequest)
-		return
-	}
-	userId, err := strconv.Atoi(id)
-	if err  !=nil {
-		http.Error(w,"Invalid User ID", http.StatusBadRequest)
-	}
+	
+	
 	if err := json.NewDecoder(r.Body).Decode(&newUsername); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if err := h.repo.UpdateUsername(userId, newUsername); err != nil {
+	if err := h.repo.UpdateUsername(id, newUsername); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -95,11 +85,7 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, "Invalid User ID", http.StatusBadRequest)
-		return
-	}
+	
 
 	var newPassword string
 	if err := json.NewDecoder(r.Body).Decode(&newPassword); err != nil {
@@ -107,7 +93,7 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.repo.UpdatePassword(userId, newPassword); err != nil {
+	if err := h.repo.UpdatePassword(id, newPassword); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

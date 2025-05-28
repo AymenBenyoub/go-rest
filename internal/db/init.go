@@ -12,7 +12,7 @@ import (
 
 func InitDB() (*sql.DB, error) {
 
-	db, err := sql.Open("mysql", "go_user:kappa123@tcp(localhost:3306)/go_test_db")
+	db, err := sql.Open("mysql", "go_user:kappa123@tcp(localhost:3306)/go_test_db?parseTime=true")
 	if err != nil {
 		return nil, err
 	}
