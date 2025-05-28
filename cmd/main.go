@@ -8,20 +8,30 @@ import (
 	"os/signal"
 	"rest/internal/db"
 	"rest/internal/server"
+	"rest/internal/handlers"
+	"rest/internal/repository"
 	"time"
 )
 
 func main() {
 	dbConn, err := db.InitDB()
+
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	log.Println("DB connection established")
 	defer dbConn.Close()
 
+
+    userRepo := repository.NewUserRepository(dbConn)
+	postRepo := repository.NewPostRepository(dbConn)
+
+	userHandler := handlers.NewUserHandler(userRepo)
+	postHandler := handlers.NewPostHandler(postRepo)
+
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      server.NewRouter(dbConn),
+		Handler:      server.NewRouter(*userHandler, *postHandler),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	
 	"rest/internal/db"
 
 	"github.com/google/uuid"
@@ -13,8 +14,9 @@ import (
 
 type UserRepository struct {
 	db *sql.DB
-
 }
+
+
 
 func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{
@@ -24,21 +26,21 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) GetUserByID(id int) (*db.User, error) {
 
-
 	query := "SELECT public_id, username, email FROM users where public_id = ?"
-	var user db.User 
-	err := r.db.QueryRow(query,id).Scan(&user.PublicID, &user.Username, &user.Email)
-	if err!= nil {
-		if errors.Is(err,sql.ErrNoRows ){
+	var user db.User
+	err := r.db.QueryRow(query, id).Scan(&user.PublicID, &user.Username, &user.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("user not found")
 		}
 		return nil, err
 	}
- 
-	return &user,nil 
+
+	return &user, nil
 }
+
 // no password crypto for now.
-func (r *UserRepository) CreateUser (user *db.User) error {
+func (r *UserRepository) CreateUser(user *db.User) error {
 
 	user_uuid := uuid.New().String()
 	query := "INSERT INTO users (public_id,username,email,password) VALUES (?,?,?,?)"
@@ -52,9 +54,9 @@ func (r *UserRepository) CreateUser (user *db.User) error {
 	return nil
 }
 
-func (r *UserRepository) UpdateUsername (id int, newUsername string ) error {
+func (r *UserRepository) UpdateUsername(id int, newUsername string) error {
 	query := "UPDATE users SET username = ? WHERE public_id = ?"
-	_ ,err := r.db.Exec(query, newUsername, id)
+	_, err := r.db.Exec(query, newUsername, id)
 	if err != nil {
 		log.Printf("Failed to update username for user with ID %d: %v", id, err)
 		return err
@@ -65,8 +67,8 @@ func (r *UserRepository) UpdateUsername (id int, newUsername string ) error {
 
 // no crypto for now.
 func (r *UserRepository) UpdatePassword(id int, newPassword string) error {
-	query:= "UPDATE users SET password = ? WHERE public_id = ?"
-	_, err := r.db.Exec(query, newPassword,id)
+	query := "UPDATE users SET password = ? WHERE public_id = ?"
+	_, err := r.db.Exec(query, newPassword, id)
 
 	if err != nil {
 		log.Printf("Failed to update password for user with ID %d: %v", id, err)
