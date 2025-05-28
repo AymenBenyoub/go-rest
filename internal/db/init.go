@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"log"
+
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
