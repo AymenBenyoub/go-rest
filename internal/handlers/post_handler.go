@@ -1,12 +1,11 @@
-package handlers 
-
+package handlers
 
 import (
+	"encoding/json"
+	"net/http"
 	"rest/internal/db"
 	"rest/internal/repository"
-	"net/http"
 	"strconv"
-	"encoding/json"
 )
 
 type PostHandler struct {
@@ -29,6 +28,7 @@ func (h *PostHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /posts/delete/{id}", h.DeletePost)
 }
 
+// WILL ADD LOGING LATER!!!
 func (h *PostHandler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.repo.GetAllPosts()
 	if err != nil {

@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	
 	"encoding/json"
 	"net/http"
 	"rest/internal/db"
 	"rest/internal/repository"
-	
 )
+
 type UserHandler struct {
 	repo *repository.UserRepository
 }
@@ -23,18 +22,16 @@ func (h *UserHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /users/create", h.CreateUser)
 	mux.HandleFunc("PUT /users/update/username/{id}", h.UpdateUsername)
 	mux.HandleFunc("PUT /users/update/password/{id}", h.UpdatePassword)
-	
+
 }
 
+// will add logging later
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
-
-	
-	
 
 	user, err := h.repo.GetUserByID(id)
 	if err != nil {
@@ -64,8 +61,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	var newUsername string
 	id := r.PathValue("id")
-	
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&newUsername); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -84,8 +80,6 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
-
-	
 
 	var newPassword string
 	if err := json.NewDecoder(r.Body).Decode(&newPassword); err != nil {

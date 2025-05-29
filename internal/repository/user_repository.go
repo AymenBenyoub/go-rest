@@ -33,7 +33,7 @@ func (r *UserRepository) GetUserByID(pubID string) (*db.User, error) {
 
 	return &user, nil
 }
-
+// no password crypto for now...
 func (r *UserRepository) CreateUser(user *db.User) error {
 	userUUID := uuid.New().String()
 
@@ -61,7 +61,7 @@ func (r *UserRepository) UpdateUsername(pubID, newUsername string) error {
 
 	return nil
 }
-
+// no password crypto for now... 
 func (r *UserRepository) UpdatePassword(pubID, newPassword string) error {
 	query := "UPDATE users SET password = ? WHERE public_id = ?"
 	res, err := r.db.Exec(query, newPassword, pubID)
