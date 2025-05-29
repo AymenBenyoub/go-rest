@@ -7,9 +7,10 @@ import (
 	"os"
 	"os/signal"
 	"rest/internal/db"
-	"rest/internal/server"
 	"rest/internal/handlers"
+	"rest/internal/middleware"
 	"rest/internal/repository"
+	"rest/internal/server"
 	"time"
 )
 
@@ -22,16 +23,16 @@ func main() {
 	log.Println("DB connection established")
 	defer dbConn.Close()
 
-
-    userRepo := repository.NewUserRepository(dbConn)
+	userRepo := repository.NewUserRepository(dbConn)
 	postRepo := repository.NewPostRepository(dbConn)
 
 	userHandler := handlers.NewUserHandler(userRepo)
 	postHandler := handlers.NewPostHandler(postRepo)
 
+	router := server.NewRouter(*userHandler, *postHandler)
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      server.NewRouter(*userHandler, *postHandler),
+		Handler:      middleware.LogMiddleware(router),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
