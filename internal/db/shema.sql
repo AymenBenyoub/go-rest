@@ -2,7 +2,7 @@ CREATE TABLE users (
     id int  PRIMARY KEY auto increment, 
     public_id VARCHAR(36) NOT NULL UNIQUE,--public facing id (UUID)
     username varchar(20) NOT NULL,
-    email VARCHAR(50) NOT NULL ,
+    email VARCHAR(50) NOT NULL UNIQUE,
     password varchar(255) NOT NULL
 );
 
