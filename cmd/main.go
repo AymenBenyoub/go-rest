@@ -32,8 +32,7 @@ func main() {
 	router := server.NewRouter(*userHandler, *postHandler)
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      middleware.LogMiddleware(router),
-		ReadTimeout:  15 * time.Second,
+		Handler:      middleware.RequestLogMiddleware(router),
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}

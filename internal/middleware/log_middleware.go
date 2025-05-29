@@ -8,7 +8,7 @@ import (
 
 // log the details of every request
 
-func LogMiddleware(next http.Handler) http.Handler {
+func RequestLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 

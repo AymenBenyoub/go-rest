@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"rest/internal/db"
 	"rest/internal/repository"
@@ -32,6 +34,7 @@ func (h *PostHandler) RegisterRoutes(mux *http.ServeMux) {
 func (h *PostHandler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.repo.GetAllPosts()
 	if err != nil {
+		log.Printf("Error retrieving posts: %v", err)
 		http.Error(w, "Failed to retrieve posts", http.StatusInternalServerError)
 		return
 	}
@@ -42,19 +45,26 @@ func (h *PostHandler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 func (h *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
+
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
 		return
 	}
 
 	postID, err := strconv.Atoi(id)
 	if err != nil {
+
 		http.Error(w, "Invalid Post ID", http.StatusBadRequest)
 		return
 	}
 
 	post, err := h.repo.GetPostByID(postID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, repository.ErrPostNotFound) {
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Error retrieving post with ID %d: %v", postID, err)
+		http.Error(w, "Failed to retrieve post", http.StatusInternalServerError)
 		return
 	}
 
@@ -68,10 +78,9 @@ func (h *PostHandler) GetPostsByUserID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
-
 	posts, err := h.repo.GetPostsByUserID(uid)
 	if err != nil {
+		log.Printf("Error retrieving posts for user %s: %v", uid, err)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -87,6 +96,7 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.repo.CreatePost(&post); err != nil {
+		log.Printf("Error creating post: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -110,12 +120,19 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	var post db.Post
 	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+		log.Printf("Error decoding request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 	post.Id = postID
 
 	if err := h.repo.UpdatePost(&post); err != nil {
+		if errors.Is(err, repository.ErrPostNotFound) {
+			log.Printf("Post with ID %d not found", postID)
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Error updating post with ID %d: %v", postID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -138,6 +155,12 @@ func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.repo.DeletePost(postID); err != nil {
+		if errors.Is(err, repository.ErrPostNotFound) {
+			log.Printf("Post with ID %d not found", postID)
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Error deleting post with ID %d: %v", postID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"rest/internal/db"
 	"rest/internal/repository"
@@ -37,6 +39,12 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.repo.GetUserByID(id)
 	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			log.Printf("User with ID %s not found", id)
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Error retrieving user with ID %s: %v", id, err)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -53,6 +61,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.repo.CreateUser(&user); err != nil {
+		log.Printf("Error creating user: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -65,10 +74,16 @@ func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	if err := json.NewDecoder(r.Body).Decode(&newUsername); err != nil {
+		log.Printf("Error decoding request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 	if err := h.repo.UpdateUsername(id, newUsername); err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			log.Printf("User with ID %s not found", id)
+			return
+		}
+		log.Printf("Error updating username for user %s: %v", id, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -85,11 +100,18 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 
 	var newPassword string
 	if err := json.NewDecoder(r.Body).Decode(&newPassword); err != nil {
+		log.Printf("Error decoding request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.repo.UpdatePassword(id, newPassword); err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			log.Printf("User with ID %s not found", id)
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Error updating password for user %s: %v", id, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -106,6 +128,13 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.repo.DeleteUser(pubID); err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			log.Printf("User with ID %s not found", pubID)
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		log.Printf("Error deleting user with ID %s: %v", pubID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -115,9 +144,13 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+
+
+//protected endpoint
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.repo.GetAllUsers()
 	if err != nil {
+		
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
