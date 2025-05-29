@@ -22,6 +22,8 @@ func (h *UserHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /users/create", h.CreateUser)
 	mux.HandleFunc("PUT /users/update/username/{id}", h.UpdateUsername)
 	mux.HandleFunc("PUT /users/update/password/{id}", h.UpdatePassword)
+	mux.HandleFunc("DELETE /users/delete/{id}", h.DeleteUser)
+	mux.HandleFunc("GET /users", h.GetAllUsers)
 
 }
 
@@ -94,4 +96,36 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Password updated successfully"})
+}
+
+func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	pubID := r.PathValue("id")
+	if pubID == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.DeleteUser(pubID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted successfully"})
+
+}
+
+func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.repo.GetAllUsers()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+
 }

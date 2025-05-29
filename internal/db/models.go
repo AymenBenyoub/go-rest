@@ -3,6 +3,7 @@ package db
 import "time"
 
 type User struct {
+	
 	PublicID string    `json:"public_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
