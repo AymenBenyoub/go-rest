@@ -14,6 +14,6 @@ type Post struct {
 	Id       int       `json:"id"`
 	Title    string    `json:"title"`
 	Text     string    `json:"text"`
-	PosterID int       `json:"poster"`
+	PosterID string       `json:"poster"`
 	PostedAt time.Time `json:"posted_at"`
 }

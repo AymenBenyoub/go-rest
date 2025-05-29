@@ -68,13 +68,9 @@ func (h *PostHandler) GetPostsByUserID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := strconv.Atoi(uid)
-	if err != nil {
-		http.Error(w, "Invalid User ID", http.StatusBadRequest)
-		return
-	}
+	
 
-	posts, err := h.repo.GetPostsByUserID(userID)
+	posts, err := h.repo.GetPostsByUserID(uid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

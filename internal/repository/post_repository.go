@@ -54,7 +54,7 @@ func (r *PostRepository) GetPostByID(id int) (*db.Post, error) {
 	return &post, nil
 }
 
-func (r *PostRepository) GetPostsByUserID(uid int) ([]*db.Post, error) {
+func (r *PostRepository) GetPostsByUserID(uid string) ([]*db.Post, error) {
 	query := "SELECT id, title, text, poster, posted_at FROM posts WHERE poster = ?"
 	rows, err := r.db.Query(query, uid)
 	if err != nil {
