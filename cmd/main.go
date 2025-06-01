@@ -30,9 +30,14 @@ func main() {
 	postHandler := handlers.NewPostHandler(postRepo)
 
 	router := server.NewRouter(*userHandler, *postHandler)
+
+	middlware_chain := middleware.Chain(middleware.RequestLogMiddleware(),
+		middleware.TimeoutMiddleware(2))
+
+		
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      middleware.RequestLogMiddleware(router),
+		Handler:      middlware_chain(router),
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
