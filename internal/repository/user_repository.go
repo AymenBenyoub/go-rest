@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 
@@ -19,11 +20,11 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) GetUserByID(pubID string) (*db.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context,pubID string) (*db.User, error) {
 	var user db.User
 
 	query := "SELECT public_id, username, email FROM users WHERE public_id = ?"
-	err := r.db.QueryRow(query, pubID).Scan(&user.PublicID, &user.Username, &user.Email)
+	err := r.db.QueryRowContext(ctx,query, pubID).Scan(&user.PublicID, &user.Username, &user.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -35,11 +36,11 @@ func (r *UserRepository) GetUserByID(pubID string) (*db.User, error) {
 }
 
 // no password crypto for now...
-func (r *UserRepository) CreateUser(user *db.User) error {
+func (r *UserRepository) CreateUser(ctx context.Context,user *db.User) error {
 	userUUID := uuid.New().String()
 
 	query := "INSERT INTO users (public_id, username, email, password) VALUES (?, ?, ?, ?)"
-	_, err := r.db.Exec(query, userUUID, user.Username, user.Email, user.Password)
+	_, err := r.db.ExecContext(ctx,query, userUUID, user.Username, user.Email, user.Password)
 	if err != nil {
 		return err
 	}
@@ -48,9 +49,9 @@ func (r *UserRepository) CreateUser(user *db.User) error {
 	return nil
 }
 
-func (r *UserRepository) UpdateUsername(pubID, newUsername string) error {
+func (r *UserRepository) UpdateUsername(ctx context.Context,pubID, newUsername string) error {
 	query := "UPDATE users SET username = ? WHERE public_id = ?"
-	res, err := r.db.Exec(query, newUsername, pubID)
+	res, err := r.db.ExecContext(ctx,query, newUsername, pubID)
 	if err != nil {
 		return err
 	}
@@ -64,9 +65,9 @@ func (r *UserRepository) UpdateUsername(pubID, newUsername string) error {
 }
 
 // no password crypto for now...
-func (r *UserRepository) UpdatePassword(pubID, newPassword string) error {
+func (r *UserRepository) UpdatePassword(ctx context.Context,pubID, newPassword string) error {
 	query := "UPDATE users SET password = ? WHERE public_id = ?"
-	res, err := r.db.Exec(query, newPassword, pubID)
+	res, err := r.db.ExecContext(ctx,query, newPassword, pubID)
 	if err != nil {
 		return err
 	}
@@ -79,9 +80,9 @@ func (r *UserRepository) UpdatePassword(pubID, newPassword string) error {
 	return nil
 }
 
-func (r *UserRepository) DeleteUser(pubID string) error {
+func (r *UserRepository) DeleteUser(ctx context.Context,pubID string) error {
 	query := "DELETE FROM users WHERE public_id = ?"
-	res, err := r.db.Exec(query, pubID)
+	res, err := r.db.ExecContext(ctx,query, pubID)
 	if err != nil {
 		return err
 	}
@@ -94,9 +95,9 @@ func (r *UserRepository) DeleteUser(pubID string) error {
 	return nil
 }
 // protected endpoint.
-func (r *UserRepository) GetAllUsers() ([]db.User, error) {
+func (r *UserRepository) GetAllUsers(ctx context.Context,) ([]db.User, error) {
 	query := "SELECT public_id, username, email FROM users"
-	rows, err := r.db.Query(query)
+	rows, err := r.db.QueryContext(ctx,query)
 	if err != nil {
 		return nil, err
 	}

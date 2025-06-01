@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 
@@ -17,9 +18,9 @@ func NewPostRepository(db *sql.DB) *PostRepository {
 	return &PostRepository{db: db}
 }
 
-func (r *PostRepository) GetAllPosts() ([]*db.Post, error) {
+func (r *PostRepository) GetAllPosts(ctx context.Context) ([]*db.Post, error) {
 	query := "SELECT id, title, text, poster, posted_at FROM posts"
-	rows, err := r.db.Query(query)
+	rows, err := r.db.QueryContext(ctx,query)
 	if err != nil {
 		return nil, err
 	}
@@ -41,10 +42,10 @@ func (r *PostRepository) GetAllPosts() ([]*db.Post, error) {
 	return posts, nil
 }
 
-func (r *PostRepository) GetPostByID(id int) (*db.Post, error) {
+func (r *PostRepository) GetPostByID(ctx context.Context,id int) (*db.Post, error) {
 	query := "SELECT id, title, text, poster, posted_at FROM posts WHERE id = ?"
 	var post db.Post
-	err := r.db.QueryRow(query, id).Scan(&post.Id, &post.Title, &post.Text, &post.PosterID, &post.PostedAt)
+	err := r.db.QueryRowContext(ctx,query, id).Scan(&post.Id, &post.Title, &post.Text, &post.PosterID, &post.PostedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrPostNotFound
@@ -54,9 +55,9 @@ func (r *PostRepository) GetPostByID(id int) (*db.Post, error) {
 	return &post, nil
 }
 
-func (r *PostRepository) GetPostsByUserID(uid string) ([]*db.Post, error) {
+func (r *PostRepository) GetPostsByUserID(ctx context.Context,uid string) ([]*db.Post, error) {
 	query := "SELECT id, title, text, poster, posted_at FROM posts WHERE poster = ?"
-	rows, err := r.db.Query(query, uid)
+	rows, err := r.db.QueryContext(ctx,query, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -78,15 +79,15 @@ func (r *PostRepository) GetPostsByUserID(uid string) ([]*db.Post, error) {
 	return posts, nil
 }
 
-func (r *PostRepository) CreatePost(post *db.Post) error {
+func (r *PostRepository) CreatePost(ctx context.Context, post *db.Post) error {
 	query := "INSERT INTO posts (title, text, poster) VALUES (?, ?, ?)"
-	_, err := r.db.Exec(query, post.Title, post.Text, post.PosterID)
+	_, err := r.db.ExecContext(ctx,query, post.Title, post.Text, post.PosterID)
 	return err
 }
 
-func (r *PostRepository) UpdatePost(post *db.Post) error {
+func (r *PostRepository) UpdatePost(ctx context.Context,post *db.Post) error {
 	query := "UPDATE posts SET title = ?, text = ? WHERE id = ?"
-	res, err := r.db.Exec(query, post.Title, post.Text, post.Id)
+	res, err := r.db.ExecContext(ctx,query, post.Title, post.Text, post.Id)
 	if err != nil {
 		return err
 	}
@@ -99,9 +100,9 @@ func (r *PostRepository) UpdatePost(post *db.Post) error {
 	return nil
 }
 
-func (r *PostRepository) DeletePost(id int) error {
+func (r *PostRepository) DeletePost(ctx context.Context,id int) error {
 	query := "DELETE FROM posts WHERE id = ?"
-	res, err := r.db.Exec(query, id)
+	res, err := r.db.ExecContext(ctx,query, id)
 	if err != nil {
 		return err
 	}

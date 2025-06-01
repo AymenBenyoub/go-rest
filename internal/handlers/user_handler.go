@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	
 	"encoding/json"
 	"errors"
 	"log"
@@ -31,13 +32,14 @@ func (h *UserHandler) RegisterRoutes(mux *http.ServeMux) {
 
 // will add logging later
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
 
-	user, err := h.repo.GetUserByID(id)
+	user, err := h.repo.GetUserByID(ctx,id)
 	if err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
 			log.Printf("User with ID %s not found", id)
@@ -54,13 +56,13 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-
+	ctx := r.Context()
 	var user db.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if err := h.repo.CreateUser(&user); err != nil {
+	if err := h.repo.CreateUser(ctx,&user); err != nil {
 		log.Printf("Error creating user: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -70,6 +72,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var newUsername string
 	id := r.PathValue("id")
 
@@ -78,7 +81,7 @@ func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if err := h.repo.UpdateUsername(id, newUsername); err != nil {
+	if err := h.repo.UpdateUsername(ctx,id, newUsername); err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
 			log.Printf("User with ID %s not found", id)
 			return
@@ -92,6 +95,7 @@ func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
@@ -105,7 +109,7 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.repo.UpdatePassword(id, newPassword); err != nil {
+	if err := h.repo.UpdatePassword(ctx,id, newPassword); err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
 			log.Printf("User with ID %s not found", id)
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -121,13 +125,14 @@ func (h *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	pubID := r.PathValue("id")
 	if pubID == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repo.DeleteUser(pubID); err != nil {
+	if err := h.repo.DeleteUser(ctx,pubID); err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
 			log.Printf("User with ID %s not found", pubID)
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -148,7 +153,8 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 //protected endpoint
 func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.repo.GetAllUsers()
+	ctx := r.Context()
+	users, err := h.repo.GetAllUsers(ctx)
 	if err != nil {
 		
 		http.Error(w, err.Error(), http.StatusInternalServerError)
